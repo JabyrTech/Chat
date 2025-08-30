@@ -1,24 +1,15 @@
 from app import app, socketio, init_db, create_status_table
 from werkzeug.security import generate_password_hash
 import sqlite3
-import os, sys, logging
-import werkzeug.serving as _serving
+import os, logging
 
-# Configure root logger
-handlers = [logging.StreamHandler()]
-
-# Only use file logging if the system allows writing
-if os.access(".", os.W_OK):  # check if current dir is writable
-    from logging.handlers import RotatingFileHandler
-    log_file = os.path.join(os.getcwd(), "chatapp.log")
-    handlers.append(RotatingFileHandler(log_file, maxBytes=5_000_000, backupCount=5))
-
+# ✅ Always log to stdout only (safe for Vercel, Docker, Heroku, etc.)
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-    handlers=handlers
+    handlers=[logging.StreamHandler()]
 )
-logging.info("=== Chat App starting ===")
+logging.info("=== Chat App starting (Vercel-safe logging) ===")
 
 def create_sample_data():
     """Create sample data if it doesn't exist"""
@@ -77,4 +68,5 @@ if __name__ == '__main__':
     create_sample_data()
     create_status_table()
     
+    # ✅ Safe run
     socketio.run(app, host="0.0.0.0", port=600, debug=False, use_reloader=False, allow_unsafe_werkzeug=True)

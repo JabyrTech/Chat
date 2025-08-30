@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DockTalk Feed</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.min.js"></script>
+</head>
+<body>
+  <div class="feed-page">
+    <h2>📰 Maritime News & Updates</h2>
+    {% if current_user.is_super_admin %}
+      <button onclick="app.showPostModal()" class="feed-post-btn">+ Post</button>
+    {% endif %}
+    <div id="feedContainer" class="feed-container"></div>
+  </div>
+
+  <!-- Modal container (shared with main app) -->
+  <div id="modalOverlay" class="modal-overlay hidden"></div>
+
+  <script src="{{ url_for('static', filename='docktalk.js') }}"></script>
+  <script>
+    window.onload = () => app.loadFeed();
+
+    // Optional: Infinite scroll
+    window.addEventListener("scroll", () => {
+      const scrollBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 100;
+      if (scrollBottom) app.loadFeed();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StaffComm - NIMASA Maritime Communication</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.js"></script>
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Mobile Header -->
+      <div class="mobile-header">
+        <button id="mobileMenuBtn" class="mobile-menu-btn">
+          <i class="fas fa-bars"></i>
+        </button>
+        <div class="mobile-title">
+          <i class="fas fa-anchor"></i>
+          <span>StaffComm</span>
+        </div>
+        <div class="mobile-actions">
+          <a href="{{ url_for('logout') }}" class="mobile-logout-btn">
+            <i class="fas fa-sign-out-alt"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Mobile Sidebar Overlay -->
+      <div id="mobileSidebarOverlay" class="mobile-sidebar-overlay hidden">
+        <div class="mobile-sidebar">
+          <div class="mobile-sidebar-header">
+            <button id="backBtn" class="back-btn">
+              <i class="fas fa-arrow-left"></i>
+            </button>
+            <span>Chats</span>
+          </div>
+          <div id="mobileChatList" class="mobile-chat-list">
+            <!-- Mobile chat list will be populated by JavaScript -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Desktop Sidebar -->
+      <div class="sidebar">
+        <div id="chatList" class="chat-list">
+          <!-- Chat list will be populated by JavaScript -->
+        </div>
+      </div>
+
+      <!-- Info Panel (Hidden by default) -->
+       <div id="infoPanel" class="info-panel hidden">
+      <div class="info-header">
+        <h3>Info</h3>
+        <button onclick="app.closeInfoPanel()">×</button>
+      </div>
+      <div class="info-tabs">
+        <button onclick="app.loadInfoTab('about')">About</button>
+        <button onclick="app.loadInfoTab('media')">Media</button>
+      </div>
+      <div id="infoContent" class="info-content"></div>
+      </div>
+
+      <!-- Announcement Panel (Hidden by default) -->
+      <div id="announcementPanel" class="announcement-panel hidden">
+        <!-- Announcement content will be populated by JavaScript -->
+      </div>
+
+      <!-- Main Content Area -->
+      <div class="main-content">
+        <!-- Welcome Screen -->
+        <div id="welcomeScreen" class="welcome-screen">
+          <div class="welcome-content">
+            <div class="welcome-icon">
+              <img src="{{ url_for('static', filename='nimasa.png') }}" alt="" width="70px">
+            </div>
+            <h1>Welcome to StaffComm</h1>
+            <p>NIMASA Maritime Communication Platform</p>
+            <div class="welcome-user-info">
+              <p>Hello, <strong>{{ current_user.full_name }}</strong></p>
+              <p>{{ current_user.department }} - {{ current_user.location }}</p>
+            </div>
+            <div class="welcome-features">
+              <div class="feature">
+                <i class="fas fa-comments"></i>
+                <span>Secure Maritime Communication</span>
+              </div>
+              <div class="feature">
+                <i class="fas fa-users"></i>
+                <span>Team Collaboration</span>
+              </div>
+              <div class="feature">
+                <i class="fas fa-bullhorn"></i>
+                <span>Community Announcements</span>
+              </div>
+            </div>
+            <p class="welcome-instruction">Select a chat to start messaging</p>
+          </div>
+        </div>
+
+        <!-- Chat Interface -->
+        <div id="chatInterface" class="chat-interface hidden">
+          <!-- Chat Header -->
+          <div class="chat-header">
+            <div class="chat-header-info">
+              <div class="chat-avatar-container">
+                <img
+                  id="chatAvatar"
+                  class="chat-avatar"
+                  src="{{ url_for('static', filename='default-avatar.gif') }}"
+                  alt=""
+                />
+                <div
+                  id="chatInitial"
+                  class="chat-initial"
+                  style="display: none"
+                ></div>
+                <div id="onlineIndicator" class="online-indicator hidden"></div>
+              </div>
+              <div class="chat-details">
+                <h3 id="chatName" class="chat-name"></h3>
+                <p id="chatStatus" class="chat-status"></p>
+                <p id="communityInfo" class="community-info hidden"></p>
+              </div>
+            </div>
+            <div class="chat-actions">
+              <button id="audioCallBtn" class="header-btn">
+                <i class="fas fa-phone"></i>
+              </button>
+              <button id="videoCallBtn" class="header-btn">
+                <i class="fas fa-video"></i>
+              </button>
+              <button id="announcementBtn" class="header-btn hidden">
+                <i class="fas fa-bullhorn"></i>
+              </button>
+              <button id="infoBtn" class="header-btn">
+                <i class="fas fa-info-circle"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Messages Area -->
+          <div id="messagesArea" class="messages-area">
+            <div id="messagesList" class="messages-list">
+              <!-- Messages will be populated by JavaScript -->
+            </div>
+            <div id="typingIndicator" class="typing-indicator hidden">
+              <div class="typing-content">
+                <div class="typing-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <span id="typingText">Someone is typing...</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recording Indicator -->
+          <div id="recordingIndicator" class="recording-indicator hidden">
+            <div class="recording-content">
+              <div class="recording-icon">
+                <i class="fas fa-microphone"></i>
+              </div>
+              <div class="recording-info">
+                <span>Recording...</span>
+                <span id="recordingTime">0</span>s
+              </div>
+              <div class="recording-progress">
+                <div
+                  id="recordingProgressBar"
+                  class="recording-progress-bar"
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Message Input -->
+          <div class="message-input-container">
+            <div class="message-input-wrapper">
+              <button id="attachBtn" class="input-btn">
+                <i class="fas fa-paperclip"></i>
+              </button>
+              <button id="imageBtn" class="input-btn">
+                <i class="fas fa-image"></i>
+              </button>
+              <textarea
+                id="messageInput"
+                class="message-input"
+                placeholder="Type a message..."
+                rows="1"
+              ></textarea>
+              <button id="voiceBtn" class="input-btn voice-btn">
+                <i class="fas fa-microphone"></i>
+              </button>
+              <button id="sendBtn" class="send-btn">
+                <i class="fas fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Call Interface -->
+      <div id="callInterface" class="call-interface hidden">
+        <div class="call-content">
+          <!-- Video Call Display -->
+          <div id="remoteVideo" class="remote-video hidden">
+            <video autoplay></video>
+            <div id="callStatusOverlay" class="call-status-overlay hidden">
+              00:00
+            </div>
+          </div>
+
+          <!-- Audio Call Display -->
+          <div id="audioCallDisplay" class="audio-call-display">
+            <div class="call-avatar-container">
+              <img
+                id="callContactAvatar"
+                class="call-avatar"
+                src="/placeholder.svg"
+                alt=""
+              />
+              <div class="call-initial" style="display: none"></div>
+            </div>
+            <h3 id="callContactName" class="call-contact-name"></h3>
+            <p id="callStatus" class="call-status">Connecting...</p>
+          </div>
+
+          <!-- Local Video -->
+          <div id="localVideoContainer" class="local-video-container hidden">
+            <video id="localVideo" autoplay muted></video>
+          </div>
+
+          <!-- Call Controls -->
+          <div class="call-controls">
+            <button id="muteBtn" class="call-control-btn">
+              <i class="fas fa-microphone"></i>
+            </button>
+            <button id="videoBtn" class="call-control-btn hidden">
+              <i class="fas fa-video"></i>
+            </button>
+            <button id="endCallBtn" class="call-control-btn end-call">
+              <i class="fas fa-phone-slash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hidden File Inputs -->
+      <input type="file" id="fileInput" accept="*/*" style="display: none" />
+      <input
+        type="file"
+        id="imageInput"
+        accept="image/*"
+        style="display: none"
+      />
+    </div>
+
+    <!-- User Info for JavaScript -->
+    <script>
+      window.currentUser = {
+          id: {{ current_user.id }},
+          username: '{{ current_user.username }}',
+          fullName: '{{ current_user.full_name }}',
+          department: '{{ current_user.department or "" }}',
+          location: '{{ current_user.location or "" }}',
+          avatar: '{{ current_user.avatar_url or "/static/default-avatar.png" }}'
+      };
+    </script>
+    <script src="{{ url_for('static', filename='docktalk.js') }}"></script>
+
+    <!-- Modal Dialogs -->
+    <div id="modalOverlay" class="modal-overlay hidden">
+      <!-- Create Community Modal -->
+      <div id="createCommunityModal" class="modal hidden">
+        <div class="modal-header">
+          <h3>Create New Community</h3>
+          <button class="modal-close" onclick="app.closeModal()">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="communityName">Community Name *</label>
+            <input
+              type="text"
+              id="communityName"
+              class="form-input"
+              placeholder="e.g., Lagos Maritime Operations"
+            />
+          </div>
+          <div class="form-group">
+            <label for="communityDescription">Description</label>
+            <textarea
+              id="communityDescription"
+              class="form-textarea"
+              placeholder="Brief description of the community purpose..."
+            ></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" onclick="app.closeModal()">
+            Cancel
+          </button>
+          <button class="btn-primary" onclick="app.createCommunity()">
+            Create Community
+          </button>
+        </div>
+      </div>
+
+      <!-- Create Group Modal -->
+      <div id="createGroupModal" class="modal hidden">
+        <div class="modal-header">
+          <h3>Create New Group</h3>
+          <button class="modal-close" onclick="app.closeModal()">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="groupName">Group Name *</label>
+            <input
+              type="text"
+              id="groupName"
+              class="form-input"
+              placeholder="e.g., Emergency Response Team"
+            />
+          </div>
+          <div class="form-group">
+            <label for="groupDescription">Description</label>
+            <textarea
+              id="groupDescription"
+              class="form-textarea"
+              placeholder="Brief description of the group purpose..."
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <label for="groupCommunity">Community *</label>
+            <select id="groupCommunity" class="form-select">
+              <option value="">Select a community...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="groupExpiry">Expiry Date (Optional)</label>
+            <input type="datetime-local" id="groupExpiry" class="form-input" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" onclick="app.closeModal()">
+            Cancel
+          </button>
+          <button class="btn-primary" onclick="app.createGroup()">
+            Create Group
+          </button>
+        </div>
+      </div>
+
+      <!-- Start Chat Modal -->
+      <div id="startChatModal" class="modal hidden">
+        <div class="modal-header">
+          <h3>Start New Chat</h3>
+          <button class="modal-close" onclick="app.closeModal()">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="userSearch">Search Users</label>
+            <input
+              type="text"
+              id="userSearch"
+              class="form-input"
+              placeholder="Search by name, username, or department..."
+            />
+          </div>
+          <div id="userSearchResults" class="search-results"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" onclick="app.closeModal()">
+            Cancel
+          </button>
+        </div>
+      </div>
+
+      <!-- Join Community Modal -->
+      <div id="joinCommunityModal" class="modal hidden">
+        <div class="modal-header">
+          <h3>Join Community</h3>
+          <button class="modal-close" onclick="app.closeModal()">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <div id="availableCommunities" class="communities-list"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" onclick="app.closeModal()">
+            Cancel
+          </button>
+        </div>
+      </div>
+
+      <!-- Join Group Modal -->
+      <div id="joinGroupModal" class="modal hidden">
+        <div class="modal-header">
+          <h3>Join Group</h3>
+          <button class="modal-close" onclick="app.closeModal()">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <div id="availableGroups" class="groups-list"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" onclick="app.closeModal()">
+            Cancel
+          </button>
+        </div>
+      </div>
+
+      <!-- Actions Menu Modal -->
+      <div id="actionsModal" class="modal hidden">
+        <div class="modal-header">
+          <h3>Actions</h3>
+          <button class="modal-close" onclick="app.closeModal()">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="actions-grid">
+            <button class="action-item" onclick="app.showStartChatModal()">
+              <i class="fas fa-comment"></i>
+              <span>Start New Chat</span>
+            </button>
+            <button class="action-item" onclick="app.showCreateGroupModal()">
+              <i class="fas fa-users"></i>
+              <span>Create Group</span>
+            </button>
+            <button class="action-item" onclick="app.showJoinGroupModal()">
+              <i class="fas fa-user-plus"></i>
+              <span>Join Group</span>
+            </button>
+            <button
+              class="action-item"
+              onclick="app.showCreateCommunityModal()"
+            >
+              <i class="fas fa-globe"></i>
+              <span>Create Community</span>
+            </button>
+            <button class="action-item" onclick="app.showJoinCommunityModal()">
+              <i class="fas fa-globe"></i>
+              <span>Join Community</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

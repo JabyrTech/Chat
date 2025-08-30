@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - StaffComm NIMASA</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #075e54 0%, #128c7e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+
+        .register-container {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .register-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .register-icon {
+            font-size: 2.5rem;
+            color: #075e54;
+            margin-bottom: 1rem;
+        }
+
+        .register-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #1c1e21;
+            margin-bottom: 0.5rem;
+        }
+
+        .register-subtitle {
+            color: #65676b;
+            font-size: 0.9rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #1c1e21;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.9rem;
+            border: 2px solid #e4e6ea;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #075e54;
+        }
+
+        .register-btn {
+            width: 100%;
+            padding: 1rem;
+            background: #075e54;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-bottom: 1rem;
+        }
+
+        .register-btn:hover {
+            background: #064e45;
+        }
+
+        .register-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .login-link {
+            text-align: center;
+            color: #65676b;
+        }
+
+        .login-link a {
+            color: #075e54;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message, .success-message {
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c53030;
+        }
+
+        .success-message {
+            background: #f0fff4;
+            color: #38a169;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="register-header">
+            <div class="register-icon">
+                <img src="{{ url_for('static', filename='nimasa.png') }}" style="width: 100px;">
+                        </div>
+            <h1 class="register-title">StaffComm</h1>
+            <p class="register-subtitle">NIMASA Maritime Communication</p>
+        </div>
+
+        <form id="registerForm">
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+            <div id="successMessage" class="success-message" style="display: none;"></div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="username" class="form-label">Username *</label>
+                    <input type="text" id="username" name="username" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="email" class="form-label">Email *</label>
+                    <input type="email" id="email" name="email" class="form-input" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="full_name" class="form-label">Full Name *</label>
+                <input type="text" id="full_name" name="full_name" class="form-input" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password" class="form-label">Password *</label>
+                <input type="password" id="password" name="password" class="form-input" required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="department" class="form-label">Department</label>
+                    <input type="text" id="department" name="department" class="form-input" 
+                           placeholder="e.g., Port Operations">
+                </div>
+                <div class="form-group">
+                    <label for="location" class="form-label">Location</label>
+                    <input type="text" id="location" name="location" class="form-input" 
+                           placeholder="e.g., Lagos Port Complex">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="phone" class="form-label">Phone Number</label>
+                <input type="tel" id="phone" name="phone" class="form-input" 
+                       placeholder="e.g., +234 801 234 5678">
+            </div>
+
+            <button type="submit" id="registerBtn" class="register-btn">
+                <span id="registerBtnText">Create Account</span>
+                <span id="registerBtnLoader" class="loading" style="display: none;"></span>
+            </button>
+        </form>
+
+        <div class="login-link">
+            Already have an account? <a href="{{ url_for('login') }}">Sign in here</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault()
+            
+            const registerBtn = document.getElementById('registerBtn')
+            const registerBtnText = document.getElementById('registerBtnText')
+            const registerBtnLoader = document.getElementById('registerBtnLoader')
+            const errorMessage = document.getElementById('errorMessage')
+            const successMessage = document.getElementById('successMessage')
+            
+            // Show loading state
+            registerBtn.disabled = true
+            registerBtnText.style.display = 'none'
+            registerBtnLoader.style.display = 'inline-block'
+            errorMessage.style.display = 'none'
+            successMessage.style.display = 'none'
+
+            const formData = {
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                full_name: document.getElementById('full_name').value,
+                password: document.getElementById('password').value,
+                department: document.getElementById('department').value,
+                location: document.getElementById('location').value,
+                phone: document.getElementById('phone').value
+            }
+
+            try {
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                })
+
+                const result = await response.json()
+
+                if (result.success) {
+                    successMessage.textContent = 'Account created successfully! Redirecting to login...'
+                    successMessage.style.display = 'block'
+                    setTimeout(() => {
+                        window.location.href = result.redirect
+                    }, 2000)
+                } else {
+                    errorMessage.textContent = result.error
+                    errorMessage.style.display = 'block'
+                }
+            } catch (error) {
+                errorMessage.textContent = 'Registration failed. Please try again.'
+                errorMessage.style.display = 'block'
+            } finally {
+                // Reset loading state
+                registerBtn.disabled = false
+                registerBtnText.style.display = 'inline'
+                registerBtnLoader.style.display = 'none'
+            }
+        })
+    </script>
+</body>
+</html>
